@@ -1,21 +1,34 @@
-import { createAction, createReducer } from '@reduxjs/toolkit'
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import axios from 'axios'
+//CREATE AN ACTION
+export const fetchPost = createAsyncThunk(
+  'post/list',
+  async (payload, { rejectWithValue, getState, dispatch }) => {
+    try {
+      const { data } = await axios.get('https://jsonplaceholder.typicode.com/posts')
+      return data;
+    } catch (error) {
+      return error?.response;
+    }
+  }
+)
 
-export const increment = createAction('increment/counter')
-export const decrement = createAction('decrement/counter')
-export const increaseAmount = createAction('increaseByAmount/counter')
-
-//reducers using builder notation
-const initialState = {
-  value: 0
-}
-export const counterSlices = createReducer(initialState, builder => {
-  builder.addCase(increment, (state, action) => {
-      state.value++;
-  })
-  builder.addCase(decrement, (state, action) => {
-      state.value--;
-  })
-  builder.addCase(increaseAmount, (state, action) => {
-      state.value += action.payload;
-  })
+//CREATE SLICES
+const postSlices = createSlice({
+  name: 'post',
+  initialState: {},
+  extraReducers:{
+    [fetchPost.pending]: (state, action) => {
+      state.loading = true;
+    },
+    [fetchPost.fulfilled]: (state, action) => {
+      state.postsList = action.payload
+      state.loading = false
+    },
+    [fetchPost.rejected]: (state,action) => {
+      state.loading = false
+      state.error = action.payload
+    }
+  }
 })
+export default postSlices.reducer
